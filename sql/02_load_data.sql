@@ -1,3 +1,5 @@
+-- Update file paths to match your local machine before running
+
 COPY store_master(store_id,store_name,city,state,region,store_type)
 FROM 'C:/your_file_path/store_master.csv'
 DELIMITER ','
