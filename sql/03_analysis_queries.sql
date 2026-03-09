@@ -34,3 +34,29 @@ LAG(monthly_revenue) OVER(ORDER BY year,month) AS prev_month_revenue,
 ROUND(monthly_revenue - LAG(monthly_revenue) OVER(ORDER BY year,month),2) AS difference,
 ROUND(((monthly_revenue - LAG(monthly_revenue) OVER(ORDER BY year,month))/monthly_revenue)*100,2) AS pct_change
 FROM monthly_revenue;
+
+--Top performing products within each category, ranked by total revenue
+WITH total_revenue AS(
+SELECT category,product_name,
+ROUND(SUM(revenue),2) AS total_revenue,
+ROUND(SUM(gross_profit),2) AS total_gross_profit
+FROM retail_transactions
+GROUP BY category, product_name
+)
+
+SELECT category, product_name, total_revenue,total_gross_profit,
+RANK() OVER (PARTITION BY category ORDER BY total_revenue DESC) AS category_rank
+FROM total_revenue
+ORDER BY category,category_rank;
+
+--Total revenue and gross margin by store and category
+SELECT s.store_name,s.city,s.state,
+sk.category,
+ROUND(SUM(r.revenue),2) AS total_revenue,
+ROUND(SUM(r.gross_profit),2) AS total_gross_profit,
+ROUND((SUM(r.gross_profit)/SUM(r.revenue))*100,2) AS pct_gross_margin
+FROM store_master AS s
+JOIN retail_transactions AS r ON r.store_id=s.store_id
+JOIN sku_master AS sk ON sk.sku_id=r.sku_id
+GROUP BY s.store_name,s.city,s.state,sk.category
+ORDER BY s.store_name,sk.category;
